@@ -1,0 +1,34 @@
+# 환경 변수 파일
+.env
+
+# IDE 파일
+.vscode/
+.idea/
+
+# 로그 파일
+*.log
+
+# OS 파일
+.DS_Store
+Thumbs.db
+
+# Node.js (만약 미래에 사용할 경우)
+node_modules/
+npm-debug.log*
+
+# Java
+target/
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Spring Boot
+application-local.yaml
+application-local.yml
+application-dev.yaml
+application-dev.yml

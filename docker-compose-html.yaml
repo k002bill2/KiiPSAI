@@ -1,0 +1,32 @@
+services:
+  springboot-app:
+    build: 
+      context: ./spring-boot-ai-chatbot
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_AI_OPENAI_API_KEY="${OPENAI_API_KEY:-your_openai_api_key_here}"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/info || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  html-chatbot-ui:
+    build: 
+      context: ./html-chatbot-ui
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"  # HTML UI가 포트 3000에서 서비스
+    depends_on:
+      - springboot-app
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
