@@ -66,21 +66,110 @@ body {
     scroll-behavior: smooth;
 }
 
+/* 향상된 스크롤바 - 간단하고 확실하게 작동 */
+.chatbox {
+    position: relative;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: #667eea rgba(248, 249, 250, 0.3);
+}
+
+/* Fade 효과 스크롤바 - 기본 투명 상태 */
 .chatbox::-webkit-scrollbar {
-    width: 6px;
+    width: 12px;
+    background: transparent;
 }
 
 .chatbox::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: rgba(210, 210, 210, 0.15);
+    border-radius: 6px;
+    margin: 3px;
+    opacity: 0;
+    transition: opacity 0.4s ease-in-out;
 }
 
 .chatbox::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 10px;
+    background: linear-gradient(135deg, #d2d2d2 0%, #b8b8b8 100%);
+    border-radius: 6px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    min-height: 30px;
+    opacity: 0;
+    transition: all 0.4s ease-in-out;
 }
 
-.chatbox::-webkit-scrollbar-thumb:hover {
-    background: #a1a1a1;
+.chatbox::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/* 마우스 오버 시 fade in 효과 */
+.chatbox:hover::-webkit-scrollbar-track {
+    opacity: 1;
+}
+
+.chatbox:hover::-webkit-scrollbar-thumb {
+    opacity: 0.8;
+}
+
+.chatbox:hover::-webkit-scrollbar-thumb:hover {
+    opacity: 1;
+    background: linear-gradient(135deg, #a8a8a8 0%, #969696 100%);
+    box-shadow: 0 2px 8px rgba(210, 210, 210, 0.4);
+    transform: scaleX(1.1);
+}
+
+.chatbox:hover::-webkit-scrollbar-thumb:active {
+    opacity: 1;
+    background: linear-gradient(135deg, #909090 0%, #808080 100%);
+    transform: scaleX(1.2);
+}
+
+/* 스크롤 중일 때 fade in 효과 */
+.chatbox.scrolling::-webkit-scrollbar-track {
+    opacity: 1;
+}
+
+.chatbox.scrolling::-webkit-scrollbar-thumb {
+    opacity: 1 !important;
+    box-shadow: 0 3px 10px rgba(210, 210, 210, 0.5);
+}
+
+/* 답변 작성 중일 때 스크롤바 표시 */
+.chatbox.streaming::-webkit-scrollbar-track {
+    opacity: 1;
+}
+
+.chatbox.streaming::-webkit-scrollbar-thumb {
+    opacity: 0.9 !important;
+    background: linear-gradient(135deg, #d2d2d2 0%, #b8b8b8 100%);
+    box-shadow: 0 2px 6px rgba(210, 210, 210, 0.4);
+}
+
+/* Fade out 상태 */
+.chatbox.fade-out::-webkit-scrollbar-track {
+    opacity: 0;
+}
+
+.chatbox.fade-out::-webkit-scrollbar-thumb {
+    opacity: 0 !important;
+}
+
+/* Firefox용 fade 지원 */
+.chatbox {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent; /* 초기 투명 상태 */
+    transition: scrollbar-color 0.4s ease-in-out;
+}
+
+.chatbox:hover,
+.chatbox.scrolling,
+.chatbox.streaming {
+    scrollbar-color: #d2d2d2 rgba(210, 210, 210, 0.2);
+}
+
+.chatbox.fade-out {
+    scrollbar-color: transparent transparent;
 }
 
 /* 메시지 컨테이너 */
@@ -141,12 +230,15 @@ body {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
-/* 작성자 이모티콘 스타일 */
-.author-emoticon {
+/* 작성자 아이콘 스타일 */
+.author-icon {
     display: inline-block;
     margin-right: 8px;
-    font-size: 16px;
     vertical-align: middle;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
 /* 로딩 애니메이션 */
@@ -204,11 +296,107 @@ body {
     border-radius: 25px;
     outline: none;
     font-size: 14px;
-    transition: border-color 0.3s;
+    background: #ffffff;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
 #messageInput:focus {
     border-color: #667eea;
+    background: #ffffff;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2), 
+                0 0 0 4px rgba(102, 126, 234, 0.1);
+    transform: translateY(-1px);
+    animation: focusPulse 0.6s ease-out;
+}
+
+#messageInput:hover:not(:focus) {
+    border-color: #bfc8e8;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+    transform: translateY(-0.5px);
+}
+
+#messageInput::placeholder {
+    color: #adb5bd;
+    transition: all 0.3s ease;
+}
+
+#messageInput:focus::placeholder {
+    color: #9aa8d1;
+    transform: translateX(2px);
+}
+
+@keyframes focusPulse {
+    0% {
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2), 
+                    0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+    50% {
+        box-shadow: 0 6px 25px rgba(102, 126, 234, 0.3), 
+                    0 0 0 6px rgba(102, 126, 234, 0.15);
+    }
+    100% {
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2), 
+                    0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+}
+
+/* JavaScript 연동 Focus 효과 클래스 */
+#messageInput.input-focused {
+    border-color: #667eea;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.25), 
+                0 0 0 4px rgba(102, 126, 234, 0.12);
+}
+
+#messageInput.typing-active {
+    border-color: #5a6fd8;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+    box-shadow: 0 5px 25px rgba(102, 126, 234, 0.3), 
+                0 0 0 5px rgba(102, 126, 234, 0.15),
+                inset 0 1px 3px rgba(102, 126, 234, 0.05);
+}
+
+#messageInput.sending-pulse {
+    animation: sendingPulse 0.3s ease-out;
+}
+
+@keyframes sendingPulse {
+    0% {
+        transform: translateY(-1px) scale(1);
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2), 
+                    0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+    50% {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 8px 30px rgba(40, 167, 69, 0.3), 
+                    0 0 0 6px rgba(40, 167, 69, 0.2);
+        border-color: #28a745;
+    }
+    100% {
+        transform: translateY(-1px) scale(1);
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2), 
+                    0 0 0 4px rgba(102, 126, 234, 0.1);
+        border-color: #667eea;
+    }
+}
+
+/* 문자 수 경고 효과 */
+#messageInput.char-warning {
+    border-color: #ffc107;
+    box-shadow: 0 4px 20px rgba(255, 193, 7, 0.2), 
+                0 0 0 4px rgba(255, 193, 7, 0.1);
+}
+
+#messageInput.char-danger {
+    border-color: #dc3545;
+    box-shadow: 0 4px 20px rgba(220, 53, 69, 0.2), 
+                0 0 0 4px rgba(220, 53, 69, 0.1);
+    animation: warningPulse 1s ease-in-out infinite;
+}
+
+@keyframes warningPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.9; }
 }
 
 #sendButton {

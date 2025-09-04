@@ -38,6 +38,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Markdown 파서 초기화
     initializeMarkdownParser();
     
+    // 스크롤 향상 기능 초기화
+    initializeScrollEnhancements();
+    
+    // Focus 효과 초기화
+    initializeFocusEffects();
+    
     messageInput.focus();
     
     // 이벤트 리스너 등록
@@ -49,6 +55,77 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Focus 효과 초기화 및 향상
+function initializeFocusEffects() {
+    if (!messageInput) return;
+    
+    let focusTimeout;
+    let isTyping = false;
+    
+    // Focus 이벤트 - 입력창이 활성화될 때
+    messageInput.addEventListener('focus', function() {
+        this.classList.add('input-focused');
+        clearTimeout(focusTimeout);
+        
+        // 부드러운 커서 깜빡임 효과
+        setTimeout(() => {
+            this.style.caretColor = '#667eea';
+        }, 100);
+    });
+    
+    // Blur 이벤트 - 입력창이 비활성화될 때
+    messageInput.addEventListener('blur', function() {
+        this.classList.remove('input-focused');
+        this.style.caretColor = 'auto';
+        
+        // 부드러운 페이드아웃 효과
+        focusTimeout = setTimeout(() => {
+            this.classList.remove('typing-active');
+        }, 200);
+    });
+    
+    // Input 이벤트 - 타이핑할 때
+    messageInput.addEventListener('input', function() {
+        isTyping = this.value.length > 0;
+        
+        if (isTyping) {
+            this.classList.add('typing-active');
+            clearTimeout(focusTimeout);
+        } else {
+            this.classList.remove('typing-active');
+        }
+        
+        // 실시간 문자 수 피드백 (선택사항)
+        updateCharacterCount(this.value.length);
+    });
+    
+    // 키 입력 시 추가 효과
+    messageInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            // 전송 시 살짝 펄스 효과
+            this.classList.add('sending-pulse');
+            setTimeout(() => {
+                this.classList.remove('sending-pulse');
+            }, 300);
+        }
+    });
+}
+
+// 문자 수 업데이트 함수 (선택사항)
+function updateCharacterCount(count) {
+    const maxLength = 500;
+    const percentage = (count / maxLength) * 100;
+    
+    // 입력창의 border 색상을 문자 수에 따라 변경
+    if (percentage > 90) {
+        messageInput.style.borderColor = '#dc3545'; // 위험 (빨강)
+    } else if (percentage > 75) {
+        messageInput.style.borderColor = '#ffc107'; // 경고 (노랑)
+    } else if (messageInput === document.activeElement) {
+        messageInput.style.borderColor = '#667eea'; // 정상 (파랑)
+    }
+}
 
 // 메시지 전송 처리
 async function handleSendMessage() {
@@ -69,12 +146,39 @@ async function handleSendMessage() {
     showLoading(true);
     
     try {
+        // 스트리밍 상태 시작 - 스크롤바 표시
+        isStreaming = true;
+        chatbox.classList.add('streaming');
+        chatbox.classList.remove('fade-out');
+        
         // API 호출
         const response = await sendMessageToAPI(message);
         addMessage(response, 'ai');
+        
+        // 스트리밍 완료 후 처리
+        isStreaming = false;
+        chatbox.classList.remove('streaming');
+        
+        // 2초 후 스크롤바 fade out (사용자가 읽을 시간 제공)
+        setTimeout(() => {
+            if (!isHovering && !isScrolling) {
+                chatbox.classList.add('fade-out');
+            }
+        }, 2000);
+        
     } catch (error) {
+        // 에러 발생 시 스트리밍 상태 종료
+        isStreaming = false;
+        chatbox.classList.remove('streaming');
         console.error('API 호출 오류:', error);
         addMessage('죄송합니다. 서버와의 연결에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.', 'ai', 'error-message');
+        
+        // 에러 후에도 적절한 시간 후 fade out
+        setTimeout(() => {
+            if (!isHovering && !isScrolling) {
+                chatbox.classList.add('fade-out');
+            }
+        }, 3000);
     } finally {
         showLoading(false);
     }
@@ -178,12 +282,13 @@ function addMessage(text, sender, className = '') {
         applyCodeHighlighting(messageDiv);
     } else {
         // 사용자 메시지는 텍스트 그대로 (보안상 안전)
-        // 작성자 이모티콘 추가
-        const authorEmoticon = document.createElement('span');
-        authorEmoticon.className = 'author-emoticon';
-        authorEmoticon.textContent = '😊';
+        // 작성자 아이콘 추가
+        const authorIcon = document.createElement('img');
+        authorIcon.className = 'author-icon';
+        authorIcon.src = 'images/user-circle.png';
+        authorIcon.alt = 'User';
         
-        messageDiv.appendChild(authorEmoticon);
+        messageDiv.appendChild(authorIcon);
         
         const textSpan = document.createElement('span');
         textSpan.textContent = text;
@@ -205,8 +310,11 @@ function addMessage(text, sender, className = '') {
     // 메시지 배열에 저장
     messages.push({ text, sender, timestamp: new Date() });
     
-    // 스크롤을 맨 아래로
-    scrollToBottom();
+    // Update scrollbar geometry and scroll to bottom
+    setTimeout(() => {
+        updateScrollbar();
+        scrollToBottom();
+    }, 50);
 }
 
 // 로딩 타이머 변수
@@ -250,11 +358,174 @@ function updateLoadingTimer() {
     }
 }
 
-// 스크롤을 맨 아래로 이동
+// Fade 효과 스크롤바 기능 및 스크롤 향상
+function initializeScrollEnhancements() {
+    if (!chatbox) return;
+    
+    let scrollTimeout;
+    let fadeTimeout;
+    let isHovering = false;
+    let isScrolling = false;
+    
+    // Fade in 효과 함수
+    function fadeInScrollbar() {
+        chatbox.classList.remove('fade-out');
+        chatbox.classList.add('scrolling');
+    }
+    
+    // Fade out 효과 함수
+    function fadeOutScrollbar() {
+        if (!isHovering && !isScrolling && !isStreaming) {
+            chatbox.classList.remove('scrolling', 'streaming');
+            chatbox.classList.add('fade-out');
+        }
+    }
+    
+    // 스트리밍 상태 변수
+    let isStreaming = false;
+    
+    // 스크롤 시 fade in 및 자동 fade out
+    chatbox.addEventListener('scroll', () => {
+        isScrolling = true;
+        fadeInScrollbar();
+        
+        // 기존 타이머 클리어
+        clearTimeout(scrollTimeout);
+        clearTimeout(fadeTimeout);
+        
+        // 스크롤이 멈춘 후 1.5초 뒤에 fade out
+        scrollTimeout = setTimeout(() => {
+            isScrolling = false;
+            
+            // fade out 전에 0.5초 대기
+            fadeTimeout = setTimeout(() => {
+                fadeOutScrollbar();
+            }, 500);
+        }, 1500);
+    });
+    
+    // 마우스 진입 시 fade in
+    chatbox.addEventListener('mouseenter', () => {
+        isHovering = true;
+        fadeInScrollbar();
+        clearTimeout(fadeTimeout);
+    });
+    
+    // 마우스 떠날 때 fade out (부드러운 딜레이)
+    chatbox.addEventListener('mouseleave', () => {
+        isHovering = false;
+        
+        // 스크롤 중이 아닐 때만 fade out
+        if (!isScrolling) {
+            fadeTimeout = setTimeout(() => {
+                fadeOutScrollbar();
+            }, 800); // 0.8초 후 fade out
+        }
+    });
+    
+    // 터치 디바이스 지원
+    let touchScrolling = false;
+    chatbox.addEventListener('touchstart', () => {
+        touchScrolling = true;
+        isScrolling = true;
+        fadeInScrollbar();
+    });
+    
+    chatbox.addEventListener('touchend', () => {
+        if (touchScrolling) {
+            setTimeout(() => {
+                isScrolling = false;
+                touchScrolling = false;
+                
+                fadeTimeout = setTimeout(() => {
+                    fadeOutScrollbar();
+                }, 1200);
+            }, 1000);
+        }
+    });
+    
+    // 부드러운 마우스 휠 스크롤
+    chatbox.addEventListener('wheel', (e) => {
+        // 스크롤바 즉시 fade in
+        isScrolling = true;
+        fadeInScrollbar();
+        clearTimeout(scrollTimeout);
+        clearTimeout(fadeTimeout);
+        
+        // 작은 휠 움직임에 대해서만 부드럽게 처리
+        if (Math.abs(e.deltaY) < 50) {
+            e.preventDefault();
+            const scrollSpeed = e.deltaY * 1.5;
+            chatbox.scrollBy({
+                top: scrollSpeed,
+                behavior: 'smooth'
+            });
+        }
+        
+        // 휠 스크롤 완료 후 fade out
+        scrollTimeout = setTimeout(() => {
+            isScrolling = false;
+            if (!isHovering) {
+                fadeTimeout = setTimeout(() => {
+                    fadeOutScrollbar();
+                }, 600);
+            }
+        }, 1200);
+    }, { passive: false });
+    
+    // 키보드 스크롤 지원
+    chatbox.addEventListener('keydown', (e) => {
+        if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key)) {
+            isScrolling = true;
+            fadeInScrollbar();
+            clearTimeout(scrollTimeout);
+            clearTimeout(fadeTimeout);
+            
+            scrollTimeout = setTimeout(() => {
+                isScrolling = false;
+                fadeTimeout = setTimeout(() => {
+                    fadeOutScrollbar();
+                }, 1000);
+            }, 1000);
+        }
+    });
+    
+    // 초기 상태를 fade out으로 설정
+    setTimeout(() => {
+        chatbox.classList.add('fade-out');
+    }, 100);
+}
+
+// 부드러운 스크롤 함수
 function scrollToBottom() {
     setTimeout(() => {
-        chatbox.scrollTop = chatbox.scrollHeight;
+        const targetScroll = chatbox.scrollHeight - chatbox.clientHeight;
+        const currentScroll = chatbox.scrollTop;
+        const distance = Math.abs(targetScroll - currentScroll);
+        
+        if (distance < 50) {
+            // 짧은 거리는 즉시 스크롤
+            chatbox.scrollTop = targetScroll;
+        } else {
+            // 긴 거리는 부드럽게 스크롤
+            chatbox.scrollTo({
+                top: targetScroll,
+                behavior: 'smooth'
+            });
+        }
+        
+        // 스크롤 중 표시
+        chatbox.classList.add('scrolling');
+        setTimeout(() => {
+            chatbox.classList.remove('scrolling');
+        }, 1000);
     }, 100);
+}
+
+// 스크롤바 업데이트 (호환성을 위해 유지)
+function updateScrollbar() {
+    // 네이티브 스크롤바는 자동으로 업데이트됨
+    // 필요시 여기에 추가 로직 구현 가능
 }
 
 // 에러 메시지 표시

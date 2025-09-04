@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfect Scrollbar 테스트</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .test-container {
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .test-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        
+        .test-button:hover {
+            background: #5a6fd8;
+        }
+        
+        .info-panel {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            text-align: left;
+        }
+        
+        .info-panel h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .feature-list li:before {
+            content: "✓";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        /* 작성자 아이콘 스타일 */
+        .author-icon {
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <div class="chatbot-container">
+        <div class="chat-header">
+            <h1>Perfect Scrollbar 스타일 테스트</h1>
+        </div>
+        
+        <div class="info-panel">
+            <h3>✨ 개선된 스크롤바 기능</h3>
+            <ul class="feature-list">
+                <li>그라데이션 스크롤바 디자인 with hover effects</li>
+                <li>부드러운 스크롤 애니메이션 (smooth scroll)</li>
+                <li>동적 스크롤바 투명도 및 확대 효과</li>
+                <li>마우스 휠 스크롤 최적화</li>
+                <li>크로스 브라우저 지원 (WebKit + Firefox)</li>
+                <li>스크롤 상태에 따른 시각적 피드백</li>
+            </ul>
+        </div>
+        
+        <div class="test-container">
+            <button class="test-button" onclick="addMultipleMessages(5)">5개 메시지 추가</button>
+            <button class="test-button" onclick="addMultipleMessages(10)">10개 메시지 추가</button>
+            <button class="test-button" onclick="addMultipleMessages(20)">20개 메시지 추가</button>
+            <button class="test-button" onclick="addLongMessage()">긴 메시지 추가</button>
+            <button class="test-button" onclick="clearAllMessages()">모든 메시지 삭제</button>
+            <button class="test-button" onclick="scrollToTop()">맨 위로 스크롤</button>
+            <button class="test-button" onclick="scrollToBottom()">맨 아래로 스크롤</button>
+        </div>
+        
+        <div class="chatbox" id="chatbox">
+            <div class="welcome-message">
+                <div class="message-container ai">
+                    <img src="images/ai-assistant.png" alt="AI avatar" class="avatar" />
+                    <div class="message ai">
+                        Perfect Scrollbar 스타일 테스트입니다! 위의 버튼들을 사용해서 스크롤바의 다양한 기능을 테스트해보세요.
+                        <br><br>
+                        <strong>테스트 방법:</strong>
+                        <br>• 메시지를 추가한 후 마우스로 스크롤바를 hover해보세요
+                        <br>• 마우스 휠로 스크롤해보세요
+                        <br>• 스크롤바를 드래그해보세요
+                        <br>• 스크롤 중에 스크롤바의 시각적 변화를 관찰해보세요
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="input-container">
+            <input type="text" id="messageInput" placeholder="직접 메시지를 입력해서 테스트해보세요..." />
+            <button id="sendButton" onclick="sendTestMessage()">
+                ➤
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        const chatbox = document.getElementById('chatbox');
+        const messageInput = document.getElementById('messageInput');
+        let messageCount = 1;
+        
+        // Perfect Scrollbar inspired smooth scroll function
+        function scrollToBottom() {
+            setTimeout(() => {
+                const targetScroll = chatbox.scrollHeight - chatbox.clientHeight;
+                const currentScroll = chatbox.scrollTop;
+                const distance = targetScroll - currentScroll;
+                
+                if (Math.abs(distance) < 50) {
+                    chatbox.scrollTop = targetScroll;
+                } else {
+                    chatbox.scrollTo({
+                        top: targetScroll,
+                        behavior: 'smooth'
+                    });
+                }
+            }, 100);
+        }
+        
+        function scrollToTop() {
+            chatbox.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+        
+        // Enhanced scroll management
+        function initializeScrollEnhancements() {
+            if (!chatbox) return;
+            
+            let scrollTimeout;
+            chatbox.addEventListener('scroll', () => {
+                chatbox.classList.add('scrolling');
+                
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    chatbox.classList.remove('scrolling');
+                }, 1000);
+            });
+            
+            chatbox.addEventListener('wheel', (e) => {
+                if (Math.abs(e.deltaY) < 100) {
+                    e.preventDefault();
+                    const scrollSpeed = e.deltaY * 2;
+                    chatbox.scrollBy({
+                        top: scrollSpeed,
+                        behavior: 'smooth'
+                    });
+                }
+            }, { passive: false });
+        }
+        
+        function addTestMessage(isUser = true, customText = null) {
+            const messageContainer = document.createElement('div');
+            messageContainer.className = `message-container ${isUser ? 'user' : 'ai'}`;
+            
+            const avatar = document.createElement('img');
+            avatar.className = 'avatar';
+            avatar.src = isUser ? 'images/user-icon.png' : 'images/ai-assistant.png';
+            avatar.alt = `${isUser ? 'User' : 'AI'} avatar`;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
+            
+            if (isUser) {
+                const authorIcon = document.createElement('img');
+                authorIcon.className = 'author-icon';
+                authorIcon.src = 'images/user.png';
+                authorIcon.alt = 'User';
+                
+                const textSpan = document.createElement('span');
+                textSpan.textContent = customText || `사용자 테스트 메시지 ${messageCount++}번입니다.`;
+                
+                messageDiv.appendChild(authorIcon);
+                messageDiv.appendChild(textSpan);
+            } else {
+                messageDiv.textContent = customText || `AI 응답 메시지 ${messageCount++}번입니다. 스크롤바 테스트를 위한 내용입니다.`;
+            }
+            
+            messageContainer.appendChild(avatar);
+            messageContainer.appendChild(messageDiv);
+            
+            chatbox.appendChild(messageContainer);
+            scrollToBottom();
+        }
+        
+        function addMultipleMessages(count) {
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    addTestMessage(i % 2 === 0);
+                }, i * 200);
+            }
+        }
+        
+        function addLongMessage() {
+            const longText = `이것은 스크롤바 테스트를 위한 매우 긴 메시지입니다. 
+            Perfect Scrollbar의 기능을 테스트하기 위해 여러 줄에 걸쳐 작성된 내용입니다.
+            
+            스크롤바의 주요 기능들:
+            1. 부드러운 스크롤 애니메이션
+            2. 마우스 호버 시 시각적 효과
+            3. 그라데이션 색상 디자인
+            4. 반투명 효과와 동적 투명도
+            5. 스크롤 상태 감지 및 피드백
+            
+            이제 스크롤바를 테스트해보세요!`;
+            
+            addTestMessage(true, longText);
+        }
+        
+        function sendTestMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+            
+            addTestMessage(true, text);
+            messageInput.value = '';
+            
+            // AI 응답 시뮬레이션
+            setTimeout(() => {
+                addTestMessage(false, `"${text}"에 대한 AI 응답입니다. 스크롤바 기능이 정상적으로 작동하고 있습니다!`);
+            }, 1000);
+        }
+        
+        function clearAllMessages() {
+            const messages = chatbox.querySelectorAll('.message-container:not(.welcome-message .message-container)');
+            messages.forEach((message, index) => {
+                setTimeout(() => {
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateY(-10px)';
+                    setTimeout(() => message.remove(), 300);
+                }, index * 50);
+            });
+            
+            messageCount = 1;
+        }
+        
+        // Enter 키로 메시지 전송
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                sendTestMessage();
+            }
+        });
+        
+        // Focus 효과 초기화 (scrollbar-test.html용)
+        function initializeFocusEffects() {
+            if (!messageInput) return;
+            
+            let focusTimeout;
+            let isTyping = false;
+            
+            // Focus 이벤트
+            messageInput.addEventListener('focus', function() {
+                this.classList.add('input-focused');
+                clearTimeout(focusTimeout);
+                setTimeout(() => {
+                    this.style.caretColor = '#667eea';
+                }, 100);
+            });
+            
+            // Blur 이벤트
+            messageInput.addEventListener('blur', function() {
+                this.classList.remove('input-focused');
+                this.style.caretColor = 'auto';
+                focusTimeout = setTimeout(() => {
+                    this.classList.remove('typing-active');
+                }, 200);
+            });
+            
+            // Input 이벤트
+            messageInput.addEventListener('input', function() {
+                isTyping = this.value.length > 0;
+                
+                if (isTyping) {
+                    this.classList.add('typing-active');
+                    clearTimeout(focusTimeout);
+                } else {
+                    this.classList.remove('typing-active');
+                }
+            });
+            
+            // 키 입력 시 추가 효과
+            messageInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    this.classList.add('sending-pulse');
+                    setTimeout(() => {
+                        this.classList.remove('sending-pulse');
+                    }, 300);
+                }
+            });
+        }
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeScrollEnhancements();
+            initializeFocusEffects();
+            
+            // 초기 테스트 메시지 추가
+            setTimeout(() => addMultipleMessages(3), 500);
+        });
+    </script>
+</body>
+</html>

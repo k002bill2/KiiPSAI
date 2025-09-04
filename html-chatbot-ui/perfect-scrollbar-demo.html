@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfect Scrollbar Advanced Demo</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .demo-container {
+            display: flex;
+            gap: 20px;
+            height: 90vh;
+            padding: 20px;
+        }
+        
+        .demo-section {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .demo-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .demo-controls {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .control-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s ease;
+        }
+        
+        .control-btn:hover {
+            background: #5a6fd8;
+        }
+        
+        .control-btn.secondary {
+            background: #6c757d;
+        }
+        
+        .control-btn.secondary:hover {
+            background: #5a6268;
+        }
+        
+        .demo-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature-showcase {
+            padding: 20px;
+            background: #fff;
+        }
+        
+        .feature-item {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .feature-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .feature-desc {
+            color: #6c757d;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .metrics-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 100;
+            min-width: 200px;
+        }
+        
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 3px 0;
+        }
+        
+        .scrollbar-info {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px;
+        }
+        
+        .scrollbar-info h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        
+        .scrollbar-info ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .scrollbar-info li {
+            margin: 5px 0;
+            color: #424242;
+        }
+        
+        /* Author emoticon styles for demo */
+        .author-emoticon {
+            display: inline-block;
+            margin-right: 8px;
+            font-size: 16px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <!-- Main Chat Demo -->
+        <div class="demo-section">
+            <div class="demo-header">
+                <span>📱 Main Chat Interface</span>
+                <span id="mainStatus">Ready</span>
+            </div>
+            
+            <div class="demo-controls">
+                <button class="control-btn" onclick="addMessages('main', 5)">5개 메시지</button>
+                <button class="control-btn" onclick="addMessages('main', 10)">10개 메시지</button>
+                <button class="control-btn" onclick="addLongMessage('main')">긴 메시지</button>
+                <button class="control-btn secondary" onclick="scrollToTop('main')">맨 위로</button>
+                <button class="control-btn secondary" onclick="scrollToBottom('main')">맨 아래로</button>
+                <button class="control-btn secondary" onclick="clearMessages('main')">전체 삭제</button>
+            </div>
+            
+            <div class="demo-content">
+                <div id="mainMetrics" class="metrics-panel">
+                    <div class="metric-row"><span>스크롤 위치:</span><span id="mainScrollPos">0</span></div>
+                    <div class="metric-row"><span>컨텐츠 높이:</span><span id="mainContentHeight">0</span></div>
+                    <div class="metric-row"><span>컨테이너 높이:</span><span id="mainContainerHeight">0</span></div>
+                    <div class="metric-row"><span>썸 크기:</span><span id="mainThumbSize">0</span></div>
+                    <div class="metric-row"><span>활성 상태:</span><span id="mainActiveState">Inactive</span></div>
+                </div>
+                
+                <div class="chatbox" id="mainChatbox">
+                    <div class="welcome-message">
+                        <div class="message-container ai">
+                            <img src="images/ai-assistant.png" alt="AI avatar" class="avatar" />
+                            <div class="message ai">
+                                🚀 Perfect Scrollbar 고급 기능 데모에 오신 것을 환영합니다!
+                                <br><br>
+                                <strong>주요 기능:</strong>
+                                <br>• 자동 숨김/보임 (Auto-hide)
+                                <br>• 정밀 스크롤링 (Precision scrolling)
+                                <br>• 부드러운 애니메이션 (Smooth animations)
+                                <br>• 드래그 앤 드롭 (Drag & drop)
+                                <br>• 마우스 휠 최적화
+                                <br>• 실시간 메트릭스
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stream Chat Demo -->
+        <div class="demo-section">
+            <div class="demo-header">
+                <span>🌊 Stream Chat Interface</span>
+                <span id="streamStatus">Ready</span>
+            </div>
+            
+            <div class="demo-controls">
+                <button class="control-btn" onclick="addMessages('stream', 5)">5개 메시지</button>
+                <button class="control-btn" onclick="addMessages('stream', 10)">10개 메시지</button>
+                <button class="control-btn" onclick="simulateStream()">스트림 시뮬레이션</button>
+                <button class="control-btn secondary" onclick="scrollToTop('stream')">맨 위로</button>
+                <button class="control-btn secondary" onclick="scrollToBottom('stream')">맨 아래로</button>
+                <button class="control-btn secondary" onclick="clearMessages('stream')">전체 삭제</button>
+            </div>
+            
+            <div class="demo-content">
+                <div id="streamMetrics" class="metrics-panel">
+                    <div class="metric-row"><span>스크롤 위치:</span><span id="streamScrollPos">0</span></div>
+                    <div class="metric-row"><span>컨텐츠 높이:</span><span id="streamContentHeight">0</span></div>
+                    <div class="metric-row"><span>컨테이너 높이:</span><span id="streamContainerHeight">0</span></div>
+                    <div class="metric-row"><span>썸 크기:</span><span id="streamThumbSize">0</span></div>
+                    <div class="metric-row"><span>활성 상태:</span><span id="streamActiveState">Inactive</span></div>
+                </div>
+                
+                <div id="streamChatDiv" style="flex: 1; overflow: hidden; background: #f4f4f4; position: relative;">
+                    <div class="message bot" style="background: rgba(255,255,255,0.9); margin: 15px; padding: 15px; border-radius: 12px;">
+                        🌊 스트림 채팅 Perfect Scrollbar 데모
+                        <br><br>
+                        이 인터페이스는 실시간 스트리밍 채팅에 최적화된 스크롤바를 보여줍니다.
+                        <br><br>
+                        <strong>스트림 특화 기능:</strong>
+                        <br>• 빠른 스크롤 응답성
+                        <br>• 실시간 컨텐츠 업데이트
+                        <br>• 부드러운 스크롤 애니메이션
+                        <br>• 스트림 색상 테마
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Features Info Panel -->
+    <div class="scrollbar-info">
+        <h3>🎯 Perfect Scrollbar 고급 기능</h3>
+        <div style="display: flex; gap: 20px;">
+            <div style="flex: 1;">
+                <strong>🎨 시각적 기능:</strong>
+                <ul>
+                    <li>그라데이션 스크롤바 디자인</li>
+                    <li>호버 시 확대 효과 (8px → 10px → 12px)</li>
+                    <li>부드러운 투명도 전환</li>
+                    <li>정밀 스크롤 가이드라인</li>
+                    <li>동적 그림자 효과</li>
+                </ul>
+            </div>
+            <div style="flex: 1;">
+                <strong>⚡ 기능적 특징:</strong>
+                <ul>
+                    <li>자동 숨김/보임 (1.5초 후)</li>
+                    <li>마우스 휠 속도 최적화</li>
+                    <li>드래그 앤 드롭 정밀 제어</li>
+                    <li>레일 클릭으로 빠른 이동</li>
+                    <li>부드러운 애니메이션 (300ms)</li>
+                </ul>
+            </div>
+            <div style="flex: 1;">
+                <strong>🔧 기술적 구현:</strong>
+                <ul>
+                    <li>네이티브 JavaScript (jQuery 불필요)</li>
+                    <li>requestAnimationFrame 최적화</li>
+                    <li>CSS3 하드웨어 가속</li>
+                    <li>이벤트 쓰로틀링</li>
+                    <li>메모리 효율적 관리</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+    <script>
+        // Demo specific variables
+        let mainScrollbarInstance = null;
+        let streamScrollbarInstance = null;
+        let messageCounter = 1;
+        
+        // Emoticons for variety
+        const emoticons = ['😊', '😄', '😆', '🤔', '😎', '🙂', '😁', '🥰', '😉', '😇', '🤗', '😋', '🤓', '😌'];
+        
+        // Initialize demo
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDemoScrollbars();
+            startMetricsUpdater();
+        });
+        
+        function initializeDemoScrollbars() {
+            const mainChatbox = document.getElementById('mainChatbox');
+            const streamChatDiv = document.getElementById('streamChatDiv');
+            
+            if (mainChatbox && typeof PerfectScrollbar !== 'undefined') {
+                mainScrollbarInstance = new PerfectScrollbar(mainChatbox, {
+                    wheelSpeed: 0.8,
+                    minScrollbarLength: 30,
+                    scrollingThreshold: 1500,
+                    theme: 'main'
+                });
+                document.getElementById('mainStatus').textContent = 'Active';
+            }
+            
+            // Create stream scrollbar using the same class structure
+            if (streamChatDiv) {
+                // Apply similar structure for stream
+                streamChatDiv.style.cssText += `
+                    scroll-behavior: smooth;
+                    scrollbar-width: thin;
+                    scrollbar-color: #2b63e5 rgba(43, 99, 229, 0.1);
+                `;
+                
+                streamScrollbarInstance = createStreamScrollbar(streamChatDiv);
+                document.getElementById('streamStatus').textContent = 'Active';
+            }
+        }
+        
+        function createStreamScrollbar(element) {
+            // Simplified stream scrollbar for demo
+            element.addEventListener('scroll', () => {
+                updateStreamMetrics();
+            });
+            
+            return {
+                scrollToBottom: () => {
+                    element.scrollTo({
+                        top: element.scrollHeight - element.clientHeight,
+                        behavior: 'smooth'
+                    });
+                },
+                scrollToTop: () => {
+                    element.scrollTo({ top: 0, behavior: 'smooth' });
+                },
+                update: () => {
+                    // Update scrollbar if needed
+                }
+            };
+        }
+        
+        function addMessages(type, count) {
+            const container = type === 'main' ? document.getElementById('mainChatbox') : document.getElementById('streamChatDiv');
+            const isStream = type === 'stream';
+            
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const isUser = i % 2 === 0;
+                    addSingleMessage(container, isUser, isStream);
+                    
+                    // Update scrollbars
+                    if (type === 'main' && mainScrollbarInstance) {
+                        mainScrollbarInstance.update();
+                        mainScrollbarInstance.scrollToBottom();
+                    } else if (type === 'stream' && streamScrollbarInstance) {
+                        streamScrollbarInstance.update();
+                        streamScrollbarInstance.scrollToBottom();
+                    }
+                }, i * 300);
+            }
+        }
+        
+        function addSingleMessage(container, isUser, isStream) {
+            const messageEl = document.createElement('div');
+            messageEl.style.cssText = `
+                margin: 10px 15px;
+                padding: 12px 16px;
+                border-radius: 12px;
+                max-width: 80%;
+                ${isUser ? 
+                    `background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-left: auto; text-align: right;` : 
+                    `background: rgba(255,255,255,0.9); color: #333; margin-right: auto;`
+                }
+                animation: fadeInUp 0.3s ease-out;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            `;
+            
+            const content = isUser ? 
+                `<span class="author-emoticon">${emoticons[Math.floor(Math.random() * emoticons.length)]}</span>사용자 메시지 ${messageCounter++}번` :
+                `AI 응답 메시지 ${messageCounter++}번입니다. Perfect Scrollbar 테스트 중입니다.`;
+                
+            messageEl.innerHTML = content;
+            
+            if (isStream) {
+                messageEl.classList.add('message', isUser ? 'user' : 'bot');
+            } else {
+                messageEl.className = isUser ? 'message user' : 'message ai';
+            }
+            
+            container.appendChild(messageEl);
+        }
+        
+        function addLongMessage(type) {
+            const container = type === 'main' ? document.getElementById('mainChatbox') : document.getElementById('streamChatDiv');
+            const longText = `이것은 Perfect Scrollbar의 긴 메시지 처리 능력을 테스트하기 위한 매우 긴 메시지입니다. 
+
+Perfect Scrollbar는 다음과 같은 고급 기능을 제공합니다:
+
+1. 🎨 시각적 개선사항:
+   - 아름다운 그라데이션 디자인
+   - 호버 시 동적 크기 변경
+   - 부드러운 애니메이션 효과
+   - 반투명 효과와 그림자
+
+2. ⚡ 성능 최적화:
+   - 하드웨어 가속 활용
+   - 메모리 효율적 관리
+   - 이벤트 쓰로틀링
+   - requestAnimationFrame 사용
+
+3. 🎯 사용자 경험:
+   - 정밀한 스크롤 제어
+   - 자동 숨김/보임 기능
+   - 직관적인 드래그 앤 드롭
+   - 레일 클릭으로 빠른 이동
+
+이 메시지는 스크롤바가 긴 콘텐츠를 어떻게 처리하는지 보여줍니다.`;
+            
+            addSingleMessage(container, true, type === 'stream');
+            
+            const messageEl = document.createElement('div');
+            messageEl.style.cssText = `
+                margin: 10px 15px;
+                padding: 15px 20px;
+                border-radius: 12px;
+                background: rgba(255,255,255,0.95);
+                color: #333;
+                line-height: 1.6;
+                white-space: pre-wrap;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            `;
+            messageEl.textContent = longText;
+            container.appendChild(messageEl);
+            
+            // Update and scroll
+            setTimeout(() => {
+                if (type === 'main' && mainScrollbarInstance) {
+                    mainScrollbarInstance.update();
+                    mainScrollbarInstance.scrollToBottom();
+                } else if (type === 'stream' && streamScrollbarInstance) {
+                    streamScrollbarInstance.update();
+                    streamScrollbarInstance.scrollToBottom();
+                }
+            }, 100);
+        }
+        
+        function simulateStream() {
+            const container = document.getElementById('streamChatDiv');
+            const words = ['안녕하세요', '실시간', '스트림', '채팅', '테스트', '중입니다', 'Perfect', 'Scrollbar', '기능을', '확인해보세요'];
+            
+            let wordIndex = 0;
+            let currentMessage = '';
+            
+            const messageEl = document.createElement('div');
+            messageEl.style.cssText = `
+                margin: 10px 15px;
+                padding: 12px 16px;
+                border-radius: 12px;
+                background: rgba(255,255,255,0.9);
+                color: #333;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                min-height: 20px;
+            `;
+            container.appendChild(messageEl);
+            
+            const streamInterval = setInterval(() => {
+                if (wordIndex < words.length) {
+                    currentMessage += words[wordIndex] + ' ';
+                    messageEl.textContent = currentMessage;
+                    wordIndex++;
+                    
+                    if (streamScrollbarInstance) {
+                        streamScrollbarInstance.update();
+                        streamScrollbarInstance.scrollToBottom();
+                    }
+                } else {
+                    clearInterval(streamInterval);
+                    messageEl.textContent = currentMessage + '(스트림 완료)';
+                }
+            }, 200);
+        }
+        
+        function scrollToTop(type) {
+            if (type === 'main' && mainScrollbarInstance) {
+                mainScrollbarInstance.scrollToTop();
+            } else if (type === 'stream' && streamScrollbarInstance) {
+                streamScrollbarInstance.scrollToTop();
+            }
+        }
+        
+        function scrollToBottom(type) {
+            if (type === 'main' && mainScrollbarInstance) {
+                mainScrollbarInstance.scrollToBottom();
+            } else if (type === 'stream' && streamScrollbarInstance) {
+                streamScrollbarInstance.scrollToBottom();
+            }
+        }
+        
+        function clearMessages(type) {
+            const container = type === 'main' ? document.getElementById('mainChatbox') : document.getElementById('streamChatDiv');
+            const messages = container.querySelectorAll('.message, div[style*="margin: 10px"]');
+            
+            messages.forEach((msg, index) => {
+                if (!msg.closest('.welcome-message')) {
+                    setTimeout(() => {
+                        msg.style.opacity = '0';
+                        msg.style.transform = 'translateY(-10px)';
+                        setTimeout(() => msg.remove(), 300);
+                    }, index * 50);
+                }
+            });
+            
+            messageCounter = 1;
+            
+            setTimeout(() => {
+                if (type === 'main' && mainScrollbarInstance) {
+                    mainScrollbarInstance.update();
+                } else if (type === 'stream' && streamScrollbarInstance) {
+                    streamScrollbarInstance.update();
+                }
+            }, 2000);
+        }
+        
+        function startMetricsUpdater() {
+            setInterval(() => {
+                updateMainMetrics();
+                updateStreamMetrics();
+            }, 100);
+        }
+        
+        function updateMainMetrics() {
+            if (mainScrollbarInstance) {
+                const el = mainScrollbarInstance.contentElement;
+                if (el) {
+                    document.getElementById('mainScrollPos').textContent = Math.round(el.scrollTop);
+                    document.getElementById('mainContentHeight').textContent = el.scrollHeight;
+                    document.getElementById('mainContainerHeight').textContent = el.clientHeight;
+                    document.getElementById('mainThumbSize').textContent = Math.round(mainScrollbarInstance.thumbYHeight || 0);
+                    document.getElementById('mainActiveState').textContent = 
+                        mainScrollbarInstance.element.classList.contains('ps--active-y') ? 'Active' : 'Inactive';
+                }
+            }
+        }
+        
+        function updateStreamMetrics() {
+            const streamDiv = document.getElementById('streamChatDiv');
+            if (streamDiv) {
+                document.getElementById('streamScrollPos').textContent = Math.round(streamDiv.scrollTop);
+                document.getElementById('streamContentHeight').textContent = streamDiv.scrollHeight;
+                document.getElementById('streamContainerHeight').textContent = streamDiv.clientHeight;
+                document.getElementById('streamThumbSize').textContent = 'N/A';
+                document.getElementById('streamActiveState').textContent = 'Native';
+            }
+        }
+        
+        // Add fadeInUp animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

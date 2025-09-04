@@ -6,7 +6,7 @@
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
-            background-color: #ececf1;
+            background-color: #f4f4f4;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -27,6 +27,7 @@
             position: relative;
         }
 
+        /* 스트림 채팅용 향상된 스크롤바 */
         #chat {
             flex-grow: 1;
             overflow-y: auto;
@@ -34,6 +35,106 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+            scrollbar-color: #2b63e5 rgba(43, 99, 229, 0.2);
+        }
+
+        /* Fade 효과 스크롤바 - 기본 투명 상태 */
+        #chat::-webkit-scrollbar {
+            width: 12px;
+            background: transparent;
+        }
+
+        #chat::-webkit-scrollbar-track {
+            background: rgba(210, 210, 210, 0.15);
+            border-radius: 6px;
+            margin: 3px;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+        }
+
+        #chat::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #d2d2d2 0%, #b8b8b8 100%);
+            border-radius: 6px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            min-height: 30px;
+            opacity: 0;
+            transition: all 0.4s ease-in-out;
+        }
+
+        #chat::-webkit-scrollbar-corner {
+            background: transparent;
+        }
+
+        /* 마우스 오버 시 fade in 효과 */
+        #chat:hover::-webkit-scrollbar-track {
+            opacity: 1;
+        }
+
+        #chat:hover::-webkit-scrollbar-thumb {
+            opacity: 0.8;
+        }
+
+        #chat:hover::-webkit-scrollbar-thumb:hover {
+            opacity: 1;
+            background: linear-gradient(135deg, #a8a8a8 0%, #969696 100%);
+            box-shadow: 0 2px 8px rgba(210, 210, 210, 0.4);
+            transform: scaleX(1.1);
+        }
+
+        #chat:hover::-webkit-scrollbar-thumb:active {
+            opacity: 1;
+            background: linear-gradient(135deg, #909090 0%, #808080 100%);
+            transform: scaleX(1.2);
+        }
+
+        /* 스크롤 중일 때 fade in 효과 */
+        #chat.scrolling::-webkit-scrollbar-track {
+            opacity: 1;
+        }
+
+        #chat.scrolling::-webkit-scrollbar-thumb {
+            opacity: 1 !important;
+            box-shadow: 0 3px 10px rgba(210, 210, 210, 0.5);
+        }
+
+        /* 답변 작성 중일 때 스크롤바 표시 */
+        #chat.streaming::-webkit-scrollbar-track {
+            opacity: 1;
+        }
+
+        #chat.streaming::-webkit-scrollbar-thumb {
+            opacity: 0.9 !important;
+            background: linear-gradient(135deg, #d2d2d2 0%, #b8b8b8 100%);
+            box-shadow: 0 2px 6px rgba(210, 210, 210, 0.4);
+        }
+
+        /* Fade out 상태 */
+        #chat.fade-out::-webkit-scrollbar-track {
+            opacity: 0;
+        }
+
+        #chat.fade-out::-webkit-scrollbar-thumb {
+            opacity: 0 !important;
+        }
+
+        /* Firefox용 fade 지원 */
+        #chat {
+            scrollbar-width: thin;
+            scrollbar-color: transparent transparent; /* 초기 투명 상태 */
+            transition: scrollbar-color 0.4s ease-in-out;
+        }
+
+        #chat:hover,
+        #chat.scrolling,
+        #chat.streaming {
+            scrollbar-color: #d2d2d2 rgba(210, 210, 210, 0.2);
+        }
+
+        #chat.fade-out {
+            scrollbar-color: transparent transparent;
         }
 
         .message {
@@ -47,16 +148,9 @@
 
         .user {
             align-self: flex-end;
-            background-color: #e7eef2;
+            background-color: #f4f4f4;
             color: #125acb;
             border-top-right-radius: 0;
-        }
-
-        .bot {
-            align-self: flex-start;
-            /* background-color: #f1f0f0; */
-            color: #111;
-            border-top-left-radius: 0;
         }
 
         #inputArea {
@@ -66,11 +160,112 @@
 
         #inputText {
             flex: 1;
-            padding: 10px;
-            font-size: 14px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
             outline: none;
+            font-size: 14px;
+            background: #ffffff;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        #inputText:focus {
+            border-color: #667eea;
+            background: #ffffff;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2), 
+                        0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+            animation: focusPulse 0.6s ease-out;
+        }
+
+        #inputText:hover:not(:focus) {
+            border-color: #bfc8e8;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+            transform: translateY(-0.5px);
+        }
+
+        #inputText::placeholder {
+            color: #adb5bd;
+            transition: all 0.3s ease;
+        }
+
+        #inputText:focus::placeholder {
+            color: #9aa8d1;
+            transform: translateX(2px);
+        }
+
+        @keyframes focusPulse {
+            0% {
+                box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2), 
+                            0 0 0 4px rgba(102, 126, 234, 0.1);
+            }
+            50% {
+                box-shadow: 0 6px 25px rgba(102, 126, 234, 0.3), 
+                            0 0 0 6px rgba(102, 126, 234, 0.15);
+            }
+            100% {
+                box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2), 
+                            0 0 0 4px rgba(102, 126, 234, 0.1);
+            }
+        }
+
+        /* JavaScript 연동 Focus 효과 클래스 */
+        #inputText.input-focused {
+            border-color: #667eea;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.25), 
+                        0 0 0 4px rgba(102, 126, 234, 0.12);
+        }
+
+        #inputText.typing-active {
+            border-color: #5a6fd8;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+            box-shadow: 0 5px 25px rgba(102, 126, 234, 0.3), 
+                        0 0 0 5px rgba(102, 126, 234, 0.15),
+                        inset 0 1px 3px rgba(102, 126, 234, 0.05);
+        }
+
+        #inputText.sending-pulse {
+            animation: sendingPulse 0.3s ease-out;
+        }
+
+        @keyframes sendingPulse {
+            0% {
+                transform: translateY(-1px) scale(1);
+                box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2), 
+                            0 0 0 4px rgba(102, 126, 234, 0.1);
+            }
+            50% {
+                transform: translateY(-2px) scale(1.02);
+                box-shadow: 0 8px 30px rgba(40, 167, 69, 0.3), 
+                            0 0 0 6px rgba(40, 167, 69, 0.2);
+                border-color: #28a745;
+            }
+            100% {
+                transform: translateY(-1px) scale(1);
+                box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2), 
+                            0 0 0 4px rgba(102, 126, 234, 0.1);
+                border-color: #667eea;
+            }
+        }
+
+        /* 문자 수 경고 효과 */
+        #inputText.char-warning {
+            border-color: #ffc107;
+            box-shadow: 0 4px 20px rgba(255, 193, 7, 0.2), 
+                        0 0 0 4px rgba(255, 193, 7, 0.1);
+        }
+
+        #inputText.char-danger {
+            border-color: #dc3545;
+            box-shadow: 0 4px 20px rgba(220, 53, 69, 0.2), 
+                        0 0 0 4px rgba(220, 53, 69, 0.1);
+            animation: warningPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes warningPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.9; }
         }
 
         #sendBtn {
@@ -162,12 +357,15 @@
             opacity: 0.8;
         }
 
-        /* 작성자 이모티콘 스타일 */
-        .author-emoticon {
+        /* 작성자 아이콘 스타일 */
+        .author-icon {
             display: inline-block;
             margin-right: 8px;
-            font-size: 16px;
             vertical-align: middle;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            object-fit: cover;
         }
 
         @keyframes pulse {
@@ -199,8 +397,7 @@
     <div class="loading-indicator" id="loadingIndicator" style="display: none;">
         <div class="spinner-container">
             <svg class="loading-spinner" width="40" height="40" viewBox="0 0 40 40">
-                <circle cx="20" cy="20" r="16" stroke="#2b63e5" stroke-width="4" fill="none" 
-                        stroke-linecap="round" stroke-dasharray="100" stroke-dashoffset="100">
+                <circle cx="20" cy="20" r="16" stroke="#2b63e5" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="100" stroke-dashoffset="100">
                     <animate attributeName="stroke-dasharray" 
                             dur="2s" 
                             values="0 100;50 100;100 100" 
@@ -229,6 +426,177 @@
     const inputText = document.getElementById('inputText');
     const sendBtn = document.getElementById('sendBtn');
     const loadingIndicator = document.getElementById('loadingIndicator');
+
+    // Fade 효과 스크롤바 기능 및 스크롤 향상
+    function initializeScrollEnhancements() {
+        if (!chatDiv) return;
+        
+        let scrollTimeout;
+        let fadeTimeout;
+        let isHovering = false;
+        let isScrolling = false;
+        
+        // Fade in 효과 함수
+        function fadeInScrollbar() {
+            chatDiv.classList.remove('fade-out');
+            chatDiv.classList.add('scrolling');
+        }
+        
+        // Fade out 효과 함수
+        function fadeOutScrollbar() {
+            if (!isHovering && !isScrolling && !isStreaming) {
+                chatDiv.classList.remove('scrolling', 'streaming');
+                chatDiv.classList.add('fade-out');
+            }
+        }
+        
+        // 스트리밍 상태 변수
+        let isStreaming = false;
+        
+        // 스크롤 시 fade in 및 자동 fade out
+        chatDiv.addEventListener('scroll', () => {
+            isScrolling = true;
+            fadeInScrollbar();
+            
+            // 기존 타이머 클리어
+            clearTimeout(scrollTimeout);
+            clearTimeout(fadeTimeout);
+            
+            // 스크롤이 멈춘 후 1.5초 뒤에 fade out
+            scrollTimeout = setTimeout(() => {
+                isScrolling = false;
+                
+                // fade out 전에 0.5초 대기
+                fadeTimeout = setTimeout(() => {
+                    fadeOutScrollbar();
+                }, 500);
+            }, 1500);
+        });
+        
+        // 마우스 진입 시 fade in
+        chatDiv.addEventListener('mouseenter', () => {
+            isHovering = true;
+            fadeInScrollbar();
+            clearTimeout(fadeTimeout);
+        });
+        
+        // 마우스 떠날 때 fade out (부드러운 딜레이)
+        chatDiv.addEventListener('mouseleave', () => {
+            isHovering = false;
+            
+            // 스크롤 중이 아닐 때만 fade out
+            if (!isScrolling) {
+                fadeTimeout = setTimeout(() => {
+                    fadeOutScrollbar();
+                }, 800); // 0.8초 후 fade out
+            }
+        });
+        
+        // 터치 디바이스 지원
+        let touchScrolling = false;
+        chatDiv.addEventListener('touchstart', () => {
+            touchScrolling = true;
+            isScrolling = true;
+            fadeInScrollbar();
+        });
+        
+        chatDiv.addEventListener('touchend', () => {
+            if (touchScrolling) {
+                setTimeout(() => {
+                    isScrolling = false;
+                    touchScrolling = false;
+                    
+                    fadeTimeout = setTimeout(() => {
+                        fadeOutScrollbar();
+                    }, 1200);
+                }, 1000);
+            }
+        });
+        
+        // 부드러운 마우스 휠 스크롤
+        chatDiv.addEventListener('wheel', (e) => {
+            // 스크롤바 즉시 fade in
+            isScrolling = true;
+            fadeInScrollbar();
+            clearTimeout(scrollTimeout);
+            clearTimeout(fadeTimeout);
+            
+            // 작은 휠 움직임에 대해서만 부드럽게 처리
+            if (Math.abs(e.deltaY) < 50) {
+                e.preventDefault();
+                const scrollSpeed = e.deltaY * 1.2;
+                chatDiv.scrollBy({
+                    top: scrollSpeed,
+                    behavior: 'smooth'
+                });
+            }
+            
+            // 휠 스크롤 완료 후 fade out
+            scrollTimeout = setTimeout(() => {
+                isScrolling = false;
+                if (!isHovering) {
+                    fadeTimeout = setTimeout(() => {
+                        fadeOutScrollbar();
+                    }, 600);
+                }
+            }, 1200);
+        }, { passive: false });
+        
+        // 키보드 스크롤 지원
+        chatDiv.addEventListener('keydown', (e) => {
+            if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key)) {
+                isScrolling = true;
+                fadeInScrollbar();
+                clearTimeout(scrollTimeout);
+                clearTimeout(fadeTimeout);
+                
+                scrollTimeout = setTimeout(() => {
+                    isScrolling = false;
+                    fadeTimeout = setTimeout(() => {
+                        fadeOutScrollbar();
+                    }, 1000);
+                }, 1000);
+            }
+        });
+        
+        // 초기 상태를 fade out으로 설정
+        setTimeout(() => {
+            chatDiv.classList.add('fade-out');
+        }, 100);
+    }
+
+    // 스트림 채팅용 부드러운 스크롤 함수
+    function smoothScrollToBottom() {
+        const targetScroll = chatDiv.scrollHeight - chatDiv.clientHeight;
+        const currentScroll = chatDiv.scrollTop;
+        const distance = Math.abs(targetScroll - currentScroll);
+        
+        if (distance < 50) {
+            // 짧은 거리는 즉시 스크롤
+            chatDiv.scrollTop = targetScroll;
+        } else {
+            // 긴 거리는 부드럽게 스크롤
+            chatDiv.scrollTo({
+                top: targetScroll,
+                behavior: 'smooth'
+            });
+        }
+        
+        // 스크롤 중 표시
+        chatDiv.classList.add('scrolling');
+        setTimeout(() => {
+            chatDiv.classList.remove('scrolling');
+        }, 1000);
+    }
+
+    // 스크롤바 업데이트 (호환성을 위해 유지)
+    function updateStreamScrollbar() {
+        // 네이티브 스크롤바는 자동으로 업데이트됨
+        // 필요시 여기에 추가 로직 구현 가능
+    }
+
+    // 스크롤 기능 초기화
+    initializeScrollEnhancements();
 
     // Marked.js 설정
     marked.setOptions({
@@ -307,11 +675,17 @@
 
             // 로딩 스피너 숨기기 및 봇 메시지 div 생성
             showLoading(false);
+            
+            // 스트리밍 상태 시작 - 스크롤바 표시
+            isStreaming = true;
+            chatDiv.classList.add('streaming');
+            chatDiv.classList.remove('fade-out');
+            
             const botMessageDiv = document.createElement('div');
             botMessageDiv.classList.add('message', 'bot');
             botMessageDiv.textContent = '';
             chatDiv.appendChild(botMessageDiv);
-            chatDiv.scrollTop = chatDiv.scrollHeight;
+            smoothScrollToBottom();
 
             let botMessage = '';
 
@@ -332,9 +706,29 @@
                     });
                 }
 
-                chatDiv.scrollTop = chatDiv.scrollHeight;
+                // 스크롤바 길이가 실시간으로 업데이트되며 자동 스크롤
+                updateStreamScrollbar();
+                smoothScrollToBottom();
+                
+                // 짧은 딜레이로 더 부드러운 렌더링
+                await new Promise(resolve => setTimeout(resolve, 10));
             }
+            
+            // 스트리밍 완료 후 처리
+            isStreaming = false;
+            chatDiv.classList.remove('streaming');
+            
+            // 2초 후 스크롤바 fade out (사용자가 읽을 시간 제공)
+            setTimeout(() => {
+                if (!isHovering && !isScrolling) {
+                    chatDiv.classList.add('fade-out');
+                }
+            }, 2000);
+            
         } catch (error) {
+            // 에러 발생 시 스트리밍 상태 종료
+            isStreaming = false;
+            chatDiv.classList.remove('streaming');
             showLoading(false);
             console.error('Stream fetch error:', error);
             
@@ -345,7 +739,14 @@
             errorMessageDiv.style.color = '#721c24';
             errorMessageDiv.textContent = '죄송합니다. 서버와의 연결에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
             chatDiv.appendChild(errorMessageDiv);
-            chatDiv.scrollTop = chatDiv.scrollHeight;
+            smoothScrollToBottom();
+            
+            // 에러 후에도 적절한 시간 후 fade out
+            setTimeout(() => {
+                if (!isHovering && !isScrolling) {
+                    chatDiv.classList.add('fade-out');
+                }
+            }, 3000);
         }
     }
 
@@ -357,15 +758,16 @@
         const userMessageDiv = document.createElement('div');
         userMessageDiv.classList.add('message', 'user');
         
-        // 작성자 이모티콘 추가
-        const authorEmoticon = document.createElement('span');
-        authorEmoticon.className = 'author-emoticon';
-        authorEmoticon.textContent = '😊';
+        // 작성자 아이콘 추가
+        const authorIcon = document.createElement('img');
+        authorIcon.className = 'author-icon';
+        authorIcon.src = 'images/user-circle.png';
+        authorIcon.alt = 'User';
         
         const textSpan = document.createElement('span');
         textSpan.textContent = text;
         
-        userMessageDiv.appendChild(authorEmoticon);
+        userMessageDiv.appendChild(authorIcon);
         userMessageDiv.appendChild(textSpan);
         
         chatDiv.appendChild(userMessageDiv);
@@ -375,9 +777,83 @@
         await fetchStream(text);
     });
 
-    inputText.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') sendBtn.click();
-    });
+    // Focus 효과 초기화 (stream.html용)
+    function initializeFocusEffects() {
+        if (!inputText) return;
+        
+        let focusTimeout;
+        let isTyping = false;
+        
+        // Focus 이벤트 - 입력창이 활성화될 때
+        inputText.addEventListener('focus', function() {
+            this.classList.add('input-focused');
+            clearTimeout(focusTimeout);
+            
+            // 부드러운 커서 깜빡임 효과
+            setTimeout(() => {
+                this.style.caretColor = '#667eea';
+            }, 100);
+        });
+        
+        // Blur 이벤트 - 입력창이 비활성화될 때
+        inputText.addEventListener('blur', function() {
+            this.classList.remove('input-focused');
+            this.style.caretColor = 'auto';
+            
+            // 부드러운 페이드아웃 효과
+            focusTimeout = setTimeout(() => {
+                this.classList.remove('typing-active');
+            }, 200);
+        });
+        
+        // Input 이벤트 - 타이핑할 때
+        inputText.addEventListener('input', function() {
+            isTyping = this.value.length > 0;
+            
+            if (isTyping) {
+                this.classList.add('typing-active');
+                clearTimeout(focusTimeout);
+            } else {
+                this.classList.remove('typing-active');
+            }
+            
+            // 실시간 문자 수 피드백
+            updateCharacterCount(this.value.length);
+        });
+        
+        // 키 입력 시 추가 효과
+        inputText.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                // 전송 시 살짝 펄스 효과
+                this.classList.add('sending-pulse');
+                setTimeout(() => {
+                    this.classList.remove('sending-pulse');
+                }, 300);
+            }
+        });
+    }
+    
+    // 문자 수 업데이트 함수 (stream.html용)
+    function updateCharacterCount(count) {
+        const maxLength = 500;
+        const percentage = (count / maxLength) * 100;
+        
+        // 클래스 제거
+        inputText.classList.remove('char-warning', 'char-danger');
+        
+        // 입력창의 border 색상을 문자 수에 따라 변경
+        if (percentage > 90) {
+            inputText.classList.add('char-danger');
+        } else if (percentage > 75) {
+            inputText.classList.add('char-warning');
+        }
+    }
+    
+    // Focus 효과 초기화 실행
+    initializeFocusEffects();
+    
+    // 스크롤 기능 초기화
+    initializeScrollEnhancements();
 </script>
 
 </body>
