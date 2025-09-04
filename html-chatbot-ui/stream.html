@@ -153,6 +153,13 @@
             border-top-right-radius: 0;
         }
 
+        .bot {
+            align-self: flex-start;
+            /* background-color: #f1f0f0; */
+            color: #111;
+            border-top-left-radius: 0;
+        }
+
         #inputArea {
             display: flex;
             gap: 8px;
@@ -777,6 +784,10 @@
         await fetchStream(text);
     });
 
+    inputText.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') sendBtn.click();
+    });
+
     // Focus 효과 초기화 (stream.html용)
     function initializeFocusEffects() {
         if (!inputText) return;
@@ -851,9 +862,6 @@
     
     // Focus 효과 초기화 실행
     initializeFocusEffects();
-    
-    // 스크롤 기능 초기화
-    initializeScrollEnhancements();
 </script>
 
 </body>
