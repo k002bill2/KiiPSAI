@@ -10,8 +10,34 @@ let messages = [];
 // API 엔드포인트 설정
 const API_BASE_URL = 'http://localhost:8080';
 
+// Markdown 설정 및 파서 초기화
+function initializeMarkdownParser() {
+    if (typeof marked !== 'undefined') {
+        // Marked.js 설정
+        marked.setOptions({
+            breaks: true, // 줄바꿈을 <br>로 변환
+            gfm: true, // GitHub Flavored Markdown 활성화
+            sanitize: false, // HTML 태그 허용 (보안상 주의 필요)
+            highlight: function(code, language) {
+                // 코드 하이라이팅 설정
+                if (typeof hljs !== 'undefined' && language && hljs.getLanguage(language)) {
+                    try {
+                        return hljs.highlight(code, {language: language}).value;
+                    } catch (e) {
+                        console.warn('Highlight.js error:', e);
+                    }
+                }
+                return code;
+            }
+        });
+    }
+}
+
 // 초기화
 document.addEventListener('DOMContentLoaded', function() {
+    // Markdown 파서 초기화
+    initializeMarkdownParser();
+    
     messageInput.focus();
     
     // 이벤트 리스너 등록
@@ -64,8 +90,8 @@ async function sendMessageToAPI(message) {
         const response = await fetch(`${API_BASE_URL}/ai/chat/string?message=${encodedMessage}`, {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Content-Type': 'text/plain',
+                'Accept': 'text/plain'
             },
             signal: controller.signal
         });
@@ -98,7 +124,32 @@ async function sendMessageToAPI(message) {
     }
 }
 
-// 메시지 추가 함수
+// 마크다운을 HTML로 변환하는 함수
+function parseMarkdown(text) {
+    if (typeof marked !== 'undefined') {
+        try {
+            const html = marked.parse(text);
+            return html;
+        } catch (e) {
+            console.warn('Markdown parsing error:', e);
+            return text;
+        }
+    }
+    // marked.js가 로드되지 않은 경우 기본 처리
+    return text.replace(/\n/g, '<br>');
+}
+
+// 코드 하이라이팅을 적용하는 함수
+function applyCodeHighlighting(element) {
+    if (typeof hljs !== 'undefined') {
+        const codeBlocks = element.querySelectorAll('pre code');
+        codeBlocks.forEach(block => {
+            hljs.highlightElement(block);
+        });
+    }
+}
+
+// 메시지 추가 함수 (마크다운 지원)
 function addMessage(text, sender, className = '') {
     const messageContainer = document.createElement('div');
     messageContainer.className = `message-container ${sender}`;
@@ -117,7 +168,27 @@ function addMessage(text, sender, className = '') {
     // 메시지 버블
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${sender} ${className}`;
-    messageDiv.textContent = text;
+    
+    // AI 메시지인 경우 마크다운 파싱, 사용자 메시지인 경우 텍스트 그대로
+    if (sender === 'ai') {
+        const htmlContent = parseMarkdown(text);
+        messageDiv.innerHTML = htmlContent;
+        
+        // 코드 하이라이팅 적용
+        applyCodeHighlighting(messageDiv);
+    } else {
+        // 사용자 메시지는 텍스트 그대로 (보안상 안전)
+        // 작성자 이모티콘 추가
+        const authorEmoticon = document.createElement('span');
+        authorEmoticon.className = 'author-emoticon';
+        authorEmoticon.textContent = '😊';
+        
+        messageDiv.appendChild(authorEmoticon);
+        
+        const textSpan = document.createElement('span');
+        textSpan.textContent = text;
+        messageDiv.appendChild(textSpan);
+    }
     
     // DOM에 추가
     messageContainer.appendChild(avatar);
@@ -138,18 +209,44 @@ function addMessage(text, sender, className = '') {
     scrollToBottom();
 }
 
+// 로딩 타이머 변수
+let loadingStartTime = null;
+let loadingTimer = null;
+
 // 로딩 표시 함수
 function showLoading(show) {
     if (show) {
         loadingIndicator.style.display = 'block';
         sendButton.disabled = true;
         messageInput.disabled = true;
-        scrollToBottom();
+        
+        // 타이머 시작
+        loadingStartTime = Date.now();
+        updateLoadingTimer();
+        loadingTimer = setInterval(updateLoadingTimer, 100); // 0.1초마다 업데이트
     } else {
         loadingIndicator.style.display = 'none';
         sendButton.disabled = false;
         messageInput.disabled = false;
         messageInput.focus();
+        
+        // 타이머 정리
+        if (loadingTimer) {
+            clearInterval(loadingTimer);
+            loadingTimer = null;
+        }
+        loadingStartTime = null;
+    }
+}
+
+// 로딩 시간 업데이트 함수
+function updateLoadingTimer() {
+    if (loadingStartTime) {
+        const elapsed = (Date.now() - loadingStartTime) / 1000;
+        const timerElement = document.getElementById('loadingTimer');
+        if (timerElement) {
+            timerElement.textContent = elapsed.toFixed(1);
+        }
     }
 }
 

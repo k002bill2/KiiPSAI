@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-이 파일은 이 저장소에서 코드 작업을 할 때 Claude Code (claude.ai/code)에게 지침을 제공합니다.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 프로젝트 개요
 
@@ -88,6 +88,8 @@ curl http://localhost:3000
   - Fetch API를 통한 백엔드 통신
   - 로딩 상태 및 에러 처리
   - 실시간 메시징 UI
+  - **마크다운 렌더링**: AI 응답의 마크다운을 HTML로 변환하여 표시
+  - **코드 하이라이팅**: Highlight.js를 사용한 코드 블록 문법 강조
 
 ### 프로젝트 구조
 ```
@@ -117,7 +119,7 @@ curl http://localhost:3000
 
 ### 주요 의존성
 - **백엔드**: Spring Boot 3.3.3, Spring AI 1.0.0-M1, OpenAI 통합
-- **프론트엔드**: Vanilla HTML/CSS/JavaScript, Font Awesome 6.0.0
+- **프론트엔드**: Vanilla HTML/CSS/JavaScript, Font Awesome 6.0.0, Marked.js 9.1.6 (마크다운 파싱), Highlight.js 11.9.0 (코드 하이라이팅)
 - **빌드 도구**: Maven (백엔드), Nginx (프론트엔드 서빙)
 
 ### 설정 참고사항
@@ -127,5 +129,21 @@ curl http://localhost:3000
 - **상태 모니터링**: Docker 헬스체크를 위한 관리 엔드포인트 활성화
 - **API 키**: 환경 변수 `OPENAI_API_KEY`를 통해 제공 필수
 
+### 마크다운 렌더링 기능
+AI 응답에서 마크다운 콘텐츠를 HTML로 렌더링하여 표시하는 기능이 구현되었습니다:
+
+#### 지원 기능
+- **텍스트 서식**: 굵게, 기울임, 인라인 코드
+- **제목**: H1-H6 제목 태그
+- **리스트**: 순서 있는/없는 리스트, 중첩 리스트
+- **코드 블록**: 문법 하이라이팅 지원 (JavaScript, Python, Java 등)
+- **인용구**: 블록 인용문
+- **테이블**: 표 형식 데이터
+- **링크**: 외부 링크
+- **수평선**: 구분선
+
+#### 테스트
+마크다운 렌더링 테스트는 `html-chatbot-ui/test-markdown.html`에서 확인 가능합니다.
+
 ### 현재 개발 상태
-`/ai/chat/string` 엔드포인트가 한국어 AI 어시스턴트로 작동하도록 완전히 구현되었습니다. 한국어 프롬프트 컨텍스트와 에러 처리가 포함되어 있으며, OpenAI API와 완전 통합되어 있습니다.
+`/ai/chat/string` 엔드포인트가 한국어 AI 어시스턴트로 작동하도록 완전히 구현되었습니다. 한국어 프롬프트 컨텍스트와 에러 처리가 포함되어 있으며, OpenAI API와 완전 통합되어 있습니다. AI 응답의 마크다운 콘텐츠는 자동으로 HTML로 변환되어 사용자에게 표시됩니다.

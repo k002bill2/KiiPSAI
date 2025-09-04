@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마크다운 렌더링 테스트</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body>
+    <div class="chatbot-container">
+        <div class="chat-header">
+            <h1>마크다운 렌더링 테스트</h1>
+        </div>
+        
+        <div class="chatbox" id="testChatbox">
+            <div class="message-container ai">
+                <img src="images/ai-assistant.png" alt="AI avatar" class="avatar" />
+                <div class="message ai" id="testMessage">
+                    <!-- 마크다운 콘텐츠가 여기에 렌더링됩니다 -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="input-container">
+            <button onclick="testMarkdownRendering()" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                마크다운 테스트 실행
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function testMarkdownRendering() {
+            const testMarkdown = `# 마크다운 렌더링 테스트
+
+## 기본 텍스트 서식
+이것은 **굵은 텍스트**이고, 이것은 *기울임 텍스트*입니다.
+
+## 리스트
+### 순서 없는 리스트:
+- 첫 번째 항목
+- 두 번째 항목  
+  - 중첩된 항목
+  - 또 다른 중첩 항목
+- 세 번째 항목
+
+### 순서 있는 리스트:
+1. 첫 번째 단계
+2. 두 번째 단계
+3. 세 번째 단계
+
+## 코드 블록
+인라인 코드: \`console.log('Hello World')\`
+
+\`\`\`javascript
+function greetUser(name) {
+    console.log(\`안녕하세요, \${name}님!\`);
+    return \`환영합니다, \${name}님!\`;
+}
+
+greetUser('개발자');
+\`\`\`
+
+\`\`\`python
+def calculate_fibonacci(n):
+    if n <= 1:
+        return n
+    return calculate_fibonacci(n-1) + calculate_fibonacci(n-2)
+
+print(calculate_fibonacci(10))
+\`\`\`
+
+## 인용구
+> 이것은 중요한 인용구입니다.
+> 여러 줄로 작성할 수 있습니다.
+
+## 테이블
+| 언어 | 난이도 | 인기도 |
+|------|--------|--------|
+| JavaScript | 보통 | 높음 |
+| Python | 쉬움 | 높음 |
+| Java | 어려움 | 보통 |
+
+## 링크
+[OpenAI 공식 사이트](https://openai.com)를 방문해보세요.
+
+## 수평선
+---
+
+이제 마크다운이 제대로 렌더링되는지 확인해보세요!`;
+
+            // Marked.js 설정
+            marked.setOptions({
+                breaks: true,
+                gfm: true,
+                sanitize: false,
+                highlight: function(code, language) {
+                    if (typeof hljs !== 'undefined' && language && hljs.getLanguage(language)) {
+                        try {
+                            return hljs.highlight(code, {language: language}).value;
+                        } catch (e) {
+                            console.warn('Highlight.js error:', e);
+                        }
+                    }
+                    return code;
+                }
+            });
+
+            // 마크다운을 HTML로 변환
+            const htmlContent = marked.parse(testMarkdown);
+            
+            // 테스트 메시지에 HTML 삽입
+            const messageElement = document.getElementById('testMessage');
+            messageElement.innerHTML = htmlContent;
+            
+            // 코드 하이라이팅 적용
+            if (typeof hljs !== 'undefined') {
+                const codeBlocks = messageElement.querySelectorAll('pre code');
+                codeBlocks.forEach(block => {
+                    hljs.highlightElement(block);
+                });
+            }
+
+            console.log('마크다운 렌더링 테스트 완료!');
+        }
+
+        // 페이지 로드 시 자동 테스트 실행
+        // document.addEventListener('DOMContentLoaded', function() {
+        //     setTimeout(testMarkdownRendering, 500);
+        // });
+    </script>
+</body>
+</html>
