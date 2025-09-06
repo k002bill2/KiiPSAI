@@ -44,14 +44,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // Focus 효과 초기화
     initializeFocusEffects();
     
+    // Auto-resize 기능 초기화
+    initializeAutoResize();
+    
     messageInput.focus();
     
     // 이벤트 리스너 등록
     sendButton.addEventListener('click', handleSendMessage);
-    messageInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSendMessage();
+    messageInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            if (e.shiftKey) {
+                // Shift+Enter: 줄바꿈 허용 (기본 동작)
+                return;
+            } else {
+                // Enter만: 메시지 전송
+                e.preventDefault();
+                handleSendMessage();
+            }
         }
     });
 });
@@ -103,7 +112,7 @@ function initializeFocusEffects() {
     // 키 입력 시 추가 효과
     messageInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
-            // 전송 시 살짝 펄스 효과
+            // Enter만 눌렀을 때 전송 시 살짝 펄스 효과
             this.classList.add('sending-pulse');
             setTimeout(() => {
                 this.classList.remove('sending-pulse');
@@ -127,6 +136,75 @@ function updateCharacterCount(count) {
     }
 }
 
+// messageInput 높이를 최소 크기로 리셋하는 함수
+function resetMessageInputHeight() {
+    const minHeight = 21; // CSS min-height와 동일
+    messageInput.style.height = 'auto';
+    messageInput.style.height = Math.max(messageInput.scrollHeight, minHeight + 24) + 'px'; // 24px는 padding
+    messageInput.style.overflowY = 'hidden';
+}
+
+// Auto-resize 기능 초기화
+function initializeAutoResize() {
+    if (!messageInput) return;
+    
+    // 초기 높이 설정
+    messageInput.style.height = 'auto';
+    const initialHeight = messageInput.scrollHeight;
+    messageInput.style.height = initialHeight + 'px';
+    
+    // 자동 크기 조정 함수
+    function autoResize() {
+        // 높이를 초기화하여 정확한 scrollHeight 계산
+        messageInput.style.height = 'auto';
+        
+        const scrollHeight = messageInput.scrollHeight;
+        const maxHeight = 200; // CSS max-height와 동일
+        const minHeight = 21; // CSS min-height와 동일 (실제로는 padding 포함하여 더 큼)
+        
+        // 높이 설정 (최대 높이 제한)
+        if (scrollHeight <= maxHeight) {
+            messageInput.style.height = Math.max(scrollHeight, minHeight + 24) + 'px'; // 24px는 padding
+            messageInput.style.overflowY = 'hidden';
+        } else {
+            messageInput.style.height = maxHeight + 'px';
+            messageInput.style.overflowY = 'auto';
+        }
+    }
+    
+    // 입력 이벤트에 auto-resize 연결
+    messageInput.addEventListener('input', autoResize);
+    
+    // 키 이벤트에도 연결 (Enter, Backspace 등)
+    messageInput.addEventListener('keydown', function(e) {
+        // Enter 키 처리 (Shift+Enter는 줄바꿈, Enter만은 전송)
+        if (e.key === 'Enter') {
+            if (e.shiftKey) {
+                // Shift+Enter: 줄바꿈이므로 크기 조정
+                setTimeout(autoResize, 10);
+            } else {
+                // Enter만: 메시지 전송 시 높이 초기화
+                setTimeout(() => {
+                    messageInput.style.height = 'auto';
+                    messageInput.style.height = Math.max(messageInput.scrollHeight, minHeight + 24) + 'px';
+                    messageInput.style.overflowY = 'hidden';
+                }, 10);
+            }
+        } else {
+            // 다른 키 입력 시 약간의 지연 후 크기 조정
+            setTimeout(autoResize, 10);
+        }
+    });
+    
+    // paste 이벤트에도 연결
+    messageInput.addEventListener('paste', function() {
+        setTimeout(autoResize, 10);
+    });
+    
+    // 초기 크기 설정
+    autoResize();
+}
+
 // 메시지 전송 처리
 async function handleSendMessage() {
     const message = messageInput.value.trim();
@@ -143,6 +221,10 @@ async function handleSendMessage() {
     // UI 업데이트
     addMessage(message, 'user');
     messageInput.value = '';
+    
+    // messageInput 높이를 최소 크기로 즉시 변경
+    resetMessageInputHeight();
+    
     showLoading(true);
     
     try {

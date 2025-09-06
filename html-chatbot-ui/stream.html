@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <title>Chat Bot</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             font-family: 'Segoe UI', sans-serif;
             background-color: #f4f4f4;
@@ -26,6 +31,28 @@
             padding: 16px;
             position: relative;
         }
+        /* 채팅박스 스타일 */
+        .chatbox {
+            flex: 0 0 auto;
+            padding: 10px;
+        }
+        /* 메시지 컨테이너 */
+        .message-container {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease-in;
+        }
+		@keyframes fadeIn {
+			from {
+				opacity: 0;
+				transform: translateY(10px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
 
         /* 스트림 채팅용 향상된 스크롤바 */
         #chat {
@@ -145,9 +172,16 @@
             line-height: 1.3rem;
             white-space: pre-wrap;
         }
-
+		.message.ai {
+			background: white;
+			color: #333;
+			border: 1px solid #e9ecef;
+			border-bottom-left-radius: 4px;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+		}
         .user {
             align-self: flex-end;
+            max-width: 80%;
             background-color: #f4f4f4;
             color: #125acb;
             border-top-right-radius: 0;
@@ -175,6 +209,52 @@
             background: #ffffff;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            resize: none;
+            overflow-y: auto;
+            min-height: 21px;
+            max-height: 200px;
+            line-height: 1.4;
+            font-family: 'Arial', sans-serif;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(102, 126, 234, 0.3) rgba(102, 126, 234, 0.1);
+        }
+
+        /* inputText 전용 커스텀 스크롤바 - border-radius 최적화 */
+        #inputText::-webkit-scrollbar {
+            width: 8px;
+            background: transparent;
+        }
+
+        #inputText::-webkit-scrollbar-track {
+            background: rgba(102, 126, 234, 0.08);
+            border-radius: 6px;
+            margin: 12px 6px; /* 상하 마진을 늘려서 border-radius 안쪽에 배치 */
+            border: none;
+        }
+
+        #inputText::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.4) 0%, rgba(71, 127, 211, 0.5) 100%);
+            border-radius: 6px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            min-height: 20px;
+            transition: all 0.3s ease;
+            margin: 2px; /* thumb에도 작은 마진 추가 */
+        }
+
+        #inputText::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.6) 0%, rgba(71, 127, 211, 0.7) 100%);
+            box-shadow: 0 2px 6px rgba(102, 126, 234, 0.2);
+            transform: scaleY(0.98); /* 살짝 축소 효과로 더 깔끔하게 */
+        }
+
+        #inputText::-webkit-scrollbar-thumb:active {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(71, 127, 211, 0.9) 100%);
+            transform: scaleY(0.95);
+        }
+
+        #inputText::-webkit-scrollbar-corner {
+            background: transparent;
+            border-radius: 6px;
         }
 
         #inputText:focus {
@@ -201,7 +281,6 @@
             color: #9aa8d1;
             transform: translateX(2px);
         }
-
         @keyframes focusPulse {
             0% {
                 box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2), 
@@ -276,17 +355,31 @@
         }
 
         #sendBtn {
-            padding: 10px 18px;
-            background-color: #2b63e5;
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #667eea 0%, #477fd3 100%);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 50%;
             cursor: pointer;
-            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
         }
 
         #sendBtn:hover {
-            background-color: #123da3;
+            transform: scale(1.05);
+        }
+
+        #sendBtn:active {
+            transform: scale(0.95);
+        }
+
+        #sendBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
         .message.bot > table {
             border-collapse: collapse;
@@ -394,11 +487,20 @@
 <body>
 
 <div id="chat-container">
-    <div id="chat"></div>
+    <div id="chat">
+        <div class="chatbox" id="chatbox">
+			<div class="message-container ai">
+				<div class="message ai">안녕하세요! KIIPS AI 챗봇입니다. 무엇을 도와드릴까요?</div>
+			</div>
+        </div>
+    </div>
 
     <div id="inputArea">
-        <input type="text" id="inputText" placeholder="메시지를 입력하세요" />
-        <button id="sendBtn">전송</button>
+        <textarea id="inputText" placeholder="메시지를 입력하세요" rows="1"></textarea>
+        <!-- <button id="sendBtn">전송</button> -->
+        <button id="sendBtn">
+            <svg width="36" height="36" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 22L16 10M16 10L11 15M16 10L21 15" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </button>
     </div>
 
     <div class="loading-indicator" id="loadingIndicator" style="display: none;">
@@ -602,8 +704,72 @@
         // 필요시 여기에 추가 로직 구현 가능
     }
 
+    // Auto-resize 기능 초기화 (stream.html용)
+    function initializeAutoResize() {
+        if (!inputText) return;
+        
+        // 초기 높이 설정
+        inputText.style.height = 'auto';
+        const initialHeight = inputText.scrollHeight;
+        inputText.style.height = initialHeight + 'px';
+        
+        // 자동 크기 조정 함수
+        function autoResize() {
+            // 높이를 초기화하여 정확한 scrollHeight 계산
+            inputText.style.height = 'auto';
+            
+            const scrollHeight = inputText.scrollHeight;
+            const maxHeight = 200; // CSS max-height와 동일
+            const minHeight = 21; // CSS min-height와 동일 (실제로는 padding 포함하여 더 큼)
+            
+            // 높이 설정 (최대 높이 제한)
+            if (scrollHeight <= maxHeight) {
+                inputText.style.height = Math.max(scrollHeight, minHeight + 24) + 'px'; // 24px는 padding
+                inputText.style.overflowY = 'hidden';
+            } else {
+                inputText.style.height = maxHeight + 'px';
+                inputText.style.overflowY = 'auto';
+            }
+        }
+        
+        // 입력 이벤트에 auto-resize 연결
+        inputText.addEventListener('input', autoResize);
+        
+        // 키 이벤트에도 연결 (Enter, Backspace 등)
+        inputText.addEventListener('keydown', function(e) {
+            // Enter 키 처리 (Shift+Enter는 줄바꿈, Enter만은 전송)
+            if (e.key === 'Enter') {
+                if (e.shiftKey) {
+                    // Shift+Enter: 줄바꿈이므로 크기 조정
+                    setTimeout(autoResize, 10);
+                } else {
+                    // Enter만: 메시지 전송 시 높이 초기화
+                    setTimeout(() => {
+                        inputText.style.height = 'auto';
+                        inputText.style.height = Math.max(inputText.scrollHeight, minHeight + 24) + 'px';
+                        inputText.style.overflowY = 'hidden';
+                    }, 10);
+                }
+            } else {
+                // 다른 키 입력 시 약간의 지연 후 크기 조정
+                setTimeout(autoResize, 10);
+            }
+        });
+        
+        // paste 이벤트에도 연결
+        inputText.addEventListener('paste', function() {
+            setTimeout(autoResize, 10);
+        });
+        
+        // 초기 크기 설정
+        autoResize();
+    }
+
     // 스크롤 기능 초기화
     initializeScrollEnhancements();
+    
+    // Auto-resize 기능 초기화
+    initializeAutoResize();
 
     // Marked.js 설정
     marked.setOptions({
@@ -781,11 +947,23 @@
 
         inputText.value = '';
 
+        // inputText 높이를 최소 크기로 즉시 변경
+        resetInputTextHeight();
+
         await fetchStream(text);
     });
 
     inputText.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') sendBtn.click();
+        if (e.key === 'Enter') {
+            if (e.shiftKey) {
+                // Shift+Enter: 줄바꿈 허용 (기본 동작)
+                return;
+            } else {
+                // Enter만: 메시지 전송
+                e.preventDefault();
+                sendBtn.click();
+            }
+        }
     });
 
     // Focus 효과 초기화 (stream.html용)
@@ -834,8 +1012,8 @@
         
         // 키 입력 시 추가 효과
         inputText.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                // 전송 시 살짝 펄스 효과
+            if (e.key === 'Enter' && !e.shiftKey) {
+                // Enter만 눌렀을 때 전송 시 살짝 펄스 효과
                 this.classList.add('sending-pulse');
                 setTimeout(() => {
                     this.classList.remove('sending-pulse');
@@ -846,7 +1024,7 @@
     
     // 문자 수 업데이트 함수 (stream.html용)
     function updateCharacterCount(count) {
-        const maxLength = 500;
+        const maxLength = 2000;
         const percentage = (count / maxLength) * 100;
         
         // 클래스 제거
@@ -858,6 +1036,14 @@
         } else if (percentage > 75) {
             inputText.classList.add('char-warning');
         }
+    }
+    
+    // inputText 높이를 최소 크기로 리셋하는 함수
+    function resetInputTextHeight() {
+        const minHeight = 21; // CSS min-height와 동일
+        inputText.style.height = 'auto';
+        inputText.style.height = Math.max(inputText.scrollHeight, minHeight + 24) + 'px'; // 24px는 padding
+        inputText.style.overflowY = 'hidden';
     }
     
     // Focus 효과 초기화 실행
